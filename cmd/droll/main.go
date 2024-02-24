@@ -31,7 +31,7 @@ func main() {
 		parseRes, parseErr := droll.ParseRollCommand(args[0])
 
 		if parseErr != nil {
-			detParseErr, ok := parseErr.(*droll.TokenParsingError)
+			detParseErr, ok := parseErr.(droll.TokenParsingError)
 
 			if !ok {
 				fmt.Print("\nAn unknown error occurred during roll parsing.\n\n")

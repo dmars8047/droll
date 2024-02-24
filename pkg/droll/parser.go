@@ -10,7 +10,6 @@ import (
 var ErrInvalidRollCommandToken = errors.New("invalid roll command token")
 
 type TokenParsingError struct {
-	Token   string
 	Details string
 }
 
