@@ -7,6 +7,10 @@ import (
 	"strings"
 )
 
+var (
+	valid_die_side_nums = []uint64{4, 6, 8, 10, 12, 20}
+)
+
 var ErrInvalidRollCommandToken = errors.New("invalid roll command token")
 
 type TokenParsingError struct {
@@ -24,7 +28,6 @@ func ParseRollCommand(rollCommandString string) ([]RollCommand, error) {
 		tokenSplit := strings.Split(token, "d")
 
 		if len(tokenSplit) != 2 {
-			// fmt.Printf("\nCommand token not recognized as a valid dice roll: %s.\n\nFor help try `droll help`.\n\n", token)
 			return nil, TokenParsingError{
 				Details: fmt.Sprintf("Command token not recognized as a valid dice roll: %s.", token),
 			}
@@ -35,7 +38,6 @@ func ParseRollCommand(rollCommandString string) ([]RollCommand, error) {
 		n, err := strconv.ParseUint(tokenSplit[0], 10, 8)
 
 		if err != nil || n > 255 {
-			// fmt.Printf("\n'%s' is not a valid number of dice. Acceptable values are greater than 0 and less than 256.\n\n", tokenSplit[0])
 			return nil, TokenParsingError{
 				Details: fmt.Sprintf("'%s' is not a valid number of dice. Acceptable values are greater than 0 and less than 256.", tokenSplit[0]),
 			}
@@ -44,9 +46,22 @@ func ParseRollCommand(rollCommandString string) ([]RollCommand, error) {
 		s, err = strconv.ParseUint(tokenSplit[1], 10, 8)
 
 		if err != nil || s > 20 {
-			// fmt.Printf("\n'%s' is not a valid nor allowable number of sides for dice. Accaptable values are greater than 1 and less than 20.\n\n", tokenSplit[1])
 			return nil, TokenParsingError{
-				Details: fmt.Sprintf("'%s' is not a valid nor allowable number of sides for dice. Accaptable values are greater than 1 and less than 20.", tokenSplit[1]),
+				Details: fmt.Sprintf("'%s' is not a valid nor allowable number of sides for dice. Accaptable values include: %v.", tokenSplit[1], valid_die_side_nums),
+			}
+		}
+
+		allowable := false
+
+		for _, allowableDie := range valid_die_side_nums {
+			if s == allowableDie {
+				allowable = true
+			}
+		}
+
+		if !allowable {
+			return nil, TokenParsingError{
+				Details: fmt.Sprintf("'%s' is not a valid nor allowable number of sides for dice. Accaptable values include: %v.", tokenSplit[1], valid_die_side_nums),
 			}
 		}
 
