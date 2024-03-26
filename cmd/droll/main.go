@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"math/rand/v2"
 	"os"
 	"strings"
 
@@ -11,7 +10,7 @@ import (
 
 func main() {
 
-	commands := make([]droll.RollCommand, 0)
+	commands := make([]droll.RollTokens, 0)
 
 	args := os.Args[1:]
 
@@ -28,10 +27,10 @@ func main() {
 			return
 		}
 
-		parseRes, parseErr := droll.ParseRollCommand(args[0])
+		parseRes, parseErr := droll.ParseRollTokens(args[0])
 
 		if parseErr != nil {
-			detParseErr, ok := parseErr.(droll.TokenParsingError)
+			detParseErr, ok := parseErr.(droll.DRollTokenParsingError)
 
 			if !ok {
 				fmt.Print("\nAn unknown error occurred during roll parsing.\n\n")
@@ -44,27 +43,18 @@ func main() {
 
 		commands = parseRes
 	} else {
-		commands = append(commands, droll.RollCommand{
+		commands = append(commands, droll.RollTokens{
 			Num:   1,
 			Sides: 20,
 		})
 	}
 
-	total := 0
-
-	for _, command := range commands {
-		for range command.Num {
-			fmt.Printf("\nRolling a d%d... ", command.Sides)
-			res := rollDie(uint8(command.Sides))
-			total += res
-			fmt.Printf("%d", res)
-		}
-		fmt.Print("\n")
-	}
-
-	fmt.Printf("\nTotal: %d\n\n", total)
+	droll.Roll(commands, consoleWriter{})
 }
 
-func rollDie(numSides uint8) int {
-	return rand.IntN(int(numSides)) + 1
+// A writer that writes to the console.
+type consoleWriter struct{}
+
+func (cw consoleWriter) Write(p []byte) (n int, err error) {
+	return fmt.Print(string(p))
 }
