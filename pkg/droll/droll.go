@@ -5,7 +5,7 @@ It includes functionality to parse dice roll commands (like "2d6+1d4"), roll dic
 
 Example usage:
 
-	commands, err := droll.ParseRollTokens("2d6+1d4")
+	commands, err := droll.ParseRollTokens("2d6+1d4", 255)
 	if err != nil {
 	    // handle error
 	}
@@ -46,7 +46,7 @@ func (parseErr DRollTokenParsingError) Error() string {
 }
 
 // ParseRollTokens parses a string of roll commands into a slice of RollTokens.
-func ParseRollTokens(rollCommandString string) ([]RollTokens, error) {
+func ParseRollTokens(rollCommandString string, maxTotalDie uint64) ([]RollTokens, error) {
 	commands := make([]RollTokens, 0)
 
 	if len(rollCommandString) == 0 {
@@ -55,30 +55,40 @@ func ParseRollTokens(rollCommandString string) ([]RollTokens, error) {
 		}
 	}
 
+	totalDie := 0
+
 	for _, token := range strings.Split(rollCommandString, "+") {
 		tokenSplit := strings.Split(token, "d")
 
 		if len(tokenSplit) != 2 {
 			return nil, DRollTokenParsingError{
-				Details: fmt.Sprintf("Command token not recognized as a valid dice roll: %s.", token),
+				Details: fmt.Sprintf("Dice roll token not recognized as a valid dice roll: %s.", token),
 			}
 		}
 
 		var n, s uint64
 
-		n, err := strconv.ParseUint(tokenSplit[0], 10, 8)
+		n, err := strconv.ParseUint(tokenSplit[0], 10, 64)
 
-		if err != nil || n > 255 {
+		if err != nil {
 			return nil, DRollTokenParsingError{
-				Details: fmt.Sprintf("'%s' is not a valid number of dice. Acceptable values are greater than 0 and less than 256.", tokenSplit[0]),
+				Details: fmt.Sprintf("'%s' is not a valid number of dice. Acceptable values are greater than 0 and less than %d.", tokenSplit[0], maxTotalDie),
 			}
 		}
 
-		s, err = strconv.ParseUint(tokenSplit[1], 10, 8)
+		totalDie += int(n)
 
-		if err != nil || s > 20 {
+		if totalDie > int(maxTotalDie) {
 			return nil, DRollTokenParsingError{
-				Details: fmt.Sprintf("'%s' is not a valid nor allowable number of sides for dice. Accaptable values include: %v.", tokenSplit[1], validDieSideNums),
+				Details: fmt.Sprintf("The total number of dice rolled exceeds the maximum allowable number of dice: %d.", maxTotalDie),
+			}
+		}
+
+		s, err = strconv.ParseUint(tokenSplit[1], 10, 64)
+
+		if err != nil {
+			return nil, DRollTokenParsingError{
+				Details: fmt.Sprintf("'%s' is not a valid number of sides for dice. Acceptable values include: %v.", tokenSplit[1], validDieSideNums),
 			}
 		}
 
@@ -86,7 +96,7 @@ func ParseRollTokens(rollCommandString string) ([]RollTokens, error) {
 
 		if !allowable {
 			return nil, DRollTokenParsingError{
-				Details: fmt.Sprintf("'%s' is not a valid nor allowable number of sides for dice. Accaptable values include: %v.", tokenSplit[1], validDieSideNums),
+				Details: fmt.Sprintf("'%s' is not an allowable number of sides for dice. Acceptable values include: %v.", tokenSplit[1], validDieSideNums),
 			}
 		}
 

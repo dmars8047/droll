@@ -36,7 +36,9 @@ func main() {
 			return
 		}
 
-		parseRes, parseErr := droll.ParseRollTokens(args[0])
+		const maxTotalDie uint64 = 255
+
+		parseRes, parseErr := droll.ParseRollTokens(args[0], maxTotalDie)
 
 		if parseErr != nil {
 			detParseErr, ok := parseErr.(droll.DRollTokenParsingError)
