@@ -15,9 +15,18 @@ func main() {
 	args := os.Args[1:]
 
 	if len(args) > 0 {
+		helpCommands := map[string]struct{}{
+			"help":  {},
+			"?":     {},
+			"/?":    {},
+			"/help": {},
+			"-?":    {},
+			"-help": {},
+		}
+
 		arg := strings.ToLower(args[0])
 
-		if arg == "help" || arg == "?" || arg == "/?" || arg == "/help" || arg == "-?" || arg == "-help" {
+		if _, ok := helpCommands[arg]; ok {
 			fmt.Print(
 				"\nName: droll\n\n",
 				"Description: droll is a dice rolling simulation program. Without any parameters the program rolls a single d20 (a 20 sided die). ",
@@ -49,12 +58,12 @@ func main() {
 		})
 	}
 
-	droll.Roll(commands, consoleWriter{})
-}
+	err := droll.Roll(commands, os.Stdout)
 
-// A writer that writes to the console.
-type consoleWriter struct{}
+	if err != nil {
+		fmt.Printf("\nAn error occurred during the roll: %s\n\n", err.Error())
+		return
+	}
 
-func (cw consoleWriter) Write(p []byte) (n int, err error) {
-	return fmt.Print(string(p))
+	fmt.Printf("\n\n")
 }
